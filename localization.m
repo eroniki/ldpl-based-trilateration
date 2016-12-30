@@ -63,40 +63,44 @@ for cnt=1:nTest
     %% Train regressors
     train
     output_nn = test_localization_nn(net, testingset_normalized);
+    output_rnn = test_localization_rnn(net, testingset_normalized);
     output_svm = test_localization_svm(mdl_x_svm, mdl_y_svm, pos_testing, testingset_normalized);
     output_lr = test_localization_lr(mdl_x_lr, mdl_y_lr, testingset_normalized);
+   
     [mse_x_nn(cnt), mse_y_nn(cnt), mse_nn(cnt)] = residual_analysis(output_nn, pos_testing);
+    [mse_x_rnn(cnt), mse_y_rnn(cnt), mse_rnn(cnt)] = residual_analysis(output_rnn, pos_testing);
     [mse_x_svm(cnt), mse_y_svm(cnt), mse_svm(cnt)] = residual_analysis(output_svm, pos_testing);
     [mse_x_lr(cnt), mse_y_lr(cnt), mse_lr(cnt)] = residual_analysis(output_lr, pos_testing);
 
     nn_results = [nn_results; output_nn];
+    rnn_results = [rnn_results; output_rnn];
     svm_results = [svm_results; output_svm];
     lr_results = [lr_results; output_lr];
 end
 %% Plot Results
 if nTest == 1
     figure; 
-    str = {'MSE_{LR}'; 'MSE_{SVM}'; 'MSE_{NN}'};
-	bar([mse_lr, mse_svm, mse_nn]);
+    str = {'MSE_{RNN}','MSE_{LR}'; 'MSE_{SVM}'; 'MSE_{NN}'};
+	bar([mse_rnn, mse_lr, mse_svm, mse_nn]);
     title('Mean Squared Error for Different Regressors');
     ylabel('Localization Error MSE (m)');
 %     set(gca, 'XTickLabel',str, 'XTick',1:numel(str));
     grid on;
     
     figure;
-    str = {'MSE_{LR,X}'; 'MSE_{LR,Y}'; 'MSE_{SVM,X}'; 'MSE_{SVM,Y}'; 'MSE_{NN,X}'; 'MSE_{NN,Y}'};
-    bar([mse_x_lr, mse_y_lr, mse_x_svm, mse_y_svm, mse_x_nn, mse_y_nn]);
+    str = {'MSE_{RNN,X}', 'MSE_{RNN,Y}', 'MSE_{LR,X}'; 'MSE_{LR,Y}'; 'MSE_{SVM,X}'; 'MSE_{SVM,Y}'; 'MSE_{NN,X}'; 'MSE_{NN,Y}'};
+    bar([mse_x_rnn, mse_y_rnn, mse_x_lr, mse_y_lr, mse_x_svm, mse_y_svm, mse_x_nn, mse_y_nn]);
 %     set(gca, 'XTickLabel', str, 'XTick',1:numel(str));
     grid on;
 else
-    figure(66); boxplot([mse_lr, mse_svm, mse_nn], 'labels', {'LR', 'SVM' , 'NN'}); grid on;
+    figure(66); boxplot([mse_rnn, mse_lr, mse_svm, mse_nn], 'labels', {'LR', 'SVM' , 'NN'}); grid on;
     title('Mean Squared Error Attained After n=20 Repetition'); 
     ylabel('MSE (m)');
     xlabel('Regressors');    
     drawnow;
     
-    figure(99); boxplot([mse_x_lr, mse_y_lr, mse_x_svm, mse_y_svm, mse_x_nn, mse_y_nn], ...
-        'labels', {'x,LR', 'y,LR', 'x,SVM', 'y,SVM', 'x,NN', 'y,NN'}); grid on;
+    figure(99); boxplot([mse_x_rnn, mse_y_rnn, mse_x_lr, mse_y_lr, mse_x_svm, mse_y_svm, mse_x_nn, mse_y_nn], ...
+        'labels', {'x,RNN', 'y,RNN', 'x,LR', 'y,LR', 'x,SVM', 'y,SVM', 'x,NN', 'y,NN'}); grid on;
     title('MSE for Different Regressors Along X- and Y- Axis n=20');
     ylabel('MSE (m)');
     xlabel('Regressors');
