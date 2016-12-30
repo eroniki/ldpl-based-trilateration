@@ -28,7 +28,7 @@ clear all, close all, clc;
 % -v n: n-fold cross validation mode
 % -q : quiet mode (no outputs)
 %%  Test regressors
-nTest = 20;
+nTest = 1;
 
 mse_x_nn = zeros(nTest,1);
 mse_y_nn = zeros(nTest,1);
