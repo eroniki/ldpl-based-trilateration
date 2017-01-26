@@ -1,14 +1,28 @@
 load('datasets/UCM/feature_space.mat');
 %%
-mean_meas = mean(featureSpace(:));
+% [~,I] = sort(pos(:,1));
+% [pos, idx] = create_path(pos(I,:), length(pos));
+% featureSpace = featureSpace(idx,:);
 
+mean_meas = mean(featureSpace(:));
+featureSpace(featureSpace==0) = -200;
 featureSpace_normalized = featureSpace - mean_meas;
 max_meas = max(featureSpace_normalized (:));
 min_meas = min(featureSpace_normalized (:));
 diff = max_meas-min_meas;
 
 featureSpace_normalized = featureSpace_normalized / std(featureSpace_normalized(:));
-featureSpace_normalized_image = uint8(255*(featureSpace_normalized  - min(featureSpace_normalized(:)))/(max(featureSpace_normalized(:))-min(featureSpace_normalized(:)))); 
+
+mean_meas = mean(featureSpace(:));
+
+% featureSpace_normalized = featureSpace;
+% featureSpace_normalized = featureSpace - mean_meas;
+% max_meas = max(featureSpace_normalized (:));
+% min_meas = min(featureSpace_normalized (:));
+% diff = max_meas-min_meas;
+
+% featureSpace_normalized = featureSpace_normalized / std(featureSpace_normalized(:));
+% featureSpace_normalized_image = uint8(255*(featureSpace_normalized  - min(featureSpace_normalized(:)))/(max(featureSpace_normalized(:))-min(featureSpace_normalized(:)))); 
 
 db__ = featureSpace_normalized;
 pos__ = pos;
