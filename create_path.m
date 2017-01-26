@@ -1,4 +1,4 @@
-function [path] = create_path(list, ntest)
+function [path, idx] = create_path(list, ntest)
     idx = [1];
 
     path(1,:) = list(1,:);
