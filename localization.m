@@ -34,6 +34,11 @@ mse_x_nn = zeros(nTest,1);
 mse_y_nn = zeros(nTest,1);
 mse_nn = zeros(nTest,1);
 
+
+mse_x_rnn = zeros(nTest,1);
+mse_y_rnn = zeros(nTest,1);
+mse_rnn = zeros(nTest,1);
+
 mse_x_svm = zeros(nTest,1);
 mse_y_svm = zeros(nTest,1);
 mse_svm = zeros(nTest,1);
@@ -41,14 +46,15 @@ mse_svm = zeros(nTest,1);
 mse_x_lr= zeros(nTest,1);
 mse_y_lr = zeros(nTest,1);
 mse_lr = zeros(nTest,1);
+
+rnn_results = [];
 nn_results = [];
 svm_results = [];
 lr_results = [];
-% create_feature_space_rgu
-% create_feature_space_ucm
-% train
+
+%%
 for cnt=1:nTest
-    cnt
+    disp(cnt);
     %%
 %     create_feature_space_bcc
 %     create_feature_space_rgu
@@ -62,38 +68,39 @@ for cnt=1:nTest
     % testingset_normalized_lr = testingset_normalized * reducedDimension;
     %% Train regressors
     train
+    %% Test
     output_nn = test_localization_nn(net, testingset_normalized);
-    output_rnn = test_localization_rnn(net, testingset_normalized);
-    output_svm = test_localization_svm(mdl_x_svm, mdl_y_svm, pos_testing, testingset_normalized);
-    output_lr = test_localization_lr(mdl_x_lr, mdl_y_lr, testingset_normalized);
+%     output_rnn = test_localization_rnn(netRNN, testingset_normalized);
+%     output_svm = test_localization_svm(mdl_x_svm, mdl_y_svm, pos_testing, testingset_normalized);
+%     output_lr = test_localization_lr(mdl_x_lr, mdl_y_lr, testingset_normalized);
    
     [mse_x_nn(cnt), mse_y_nn(cnt), mse_nn(cnt)] = residual_analysis(output_nn, pos_testing);
-    [mse_x_rnn(cnt), mse_y_rnn(cnt), mse_rnn(cnt)] = residual_analysis(output_rnn, pos_testing);
-    [mse_x_svm(cnt), mse_y_svm(cnt), mse_svm(cnt)] = residual_analysis(output_svm, pos_testing);
-    [mse_x_lr(cnt), mse_y_lr(cnt), mse_lr(cnt)] = residual_analysis(output_lr, pos_testing);
+%     [mse_x_rnn(cnt), mse_y_rnn(cnt), mse_rnn(cnt)] = residual_analysis(output_rnn, pos_testing);
+%     [mse_x_svm(cnt), mse_y_svm(cnt), mse_svm(cnt)] = residual_analysis(output_svm, pos_testing);
+%     [mse_x_lr(cnt), mse_y_lr(cnt), mse_lr(cnt)] = residual_analysis(output_lr, pos_testing);
 
     nn_results = [nn_results; output_nn];
-    rnn_results = [rnn_results; output_rnn];
-    svm_results = [svm_results; output_svm];
-    lr_results = [lr_results; output_lr];
+%     rnn_results = [rnn_results; output_rnn];
+%     svm_results = [svm_results; output_svm];
+%     lr_results = [lr_results; output_lr];
 end
 %% Plot Results
 if nTest == 1
     figure; 
-    str = {'MSE_{RNN}','MSE_{LR}'; 'MSE_{SVM}'; 'MSE_{NN}'};
+    str = {'MSE_{RNN}';'MSE_{LR}'; 'MSE_{SVM}'; 'MSE_{NN}'};
 	bar([mse_rnn, mse_lr, mse_svm, mse_nn]);
-    title('Mean Squared Error for Different Regressors');
+    title('Mean Squared Error for Different R2egressors');
     ylabel('Localization Error MSE (m)');
-%     set(gca, 'XTickLabel',str, 'XTick',1:numel(str));
+    set(gca, 'XTickLabel',str, 'XTick',1:numel(str));
     grid on;
     
     figure;
-    str = {'MSE_{RNN,X}', 'MSE_{RNN,Y}', 'MSE_{LR,X}'; 'MSE_{LR,Y}'; 'MSE_{SVM,X}'; 'MSE_{SVM,Y}'; 'MSE_{NN,X}'; 'MSE_{NN,Y}'};
+    str = {'MSE_{RNN,X}'; 'MSE_{RNN,Y}'; 'MSE_{LR,X}'; 'MSE_{LR,Y}'; 'MSE_{SVM,X}'; 'MSE_{SVM,Y}'; 'MSE_{NN,X}'; 'MSE_{NN,Y}'};
     bar([mse_x_rnn, mse_y_rnn, mse_x_lr, mse_y_lr, mse_x_svm, mse_y_svm, mse_x_nn, mse_y_nn]);
-%     set(gca, 'XTickLabel', str, 'XTick',1:numel(str));
+    set(gca, 'XTickLabel', str, 'XTick',1:numel(str));
     grid on;
 else
-    figure(66); boxplot([mse_rnn, mse_lr, mse_svm, mse_nn], 'labels', {'LR', 'SVM' , 'NN'}); grid on;
+    figure(66); boxplot([mse_rnn, mse_lr, mse_svm, mse_nn], 'labels', {'RNN', 'LR', 'SVM' , 'NN'}); grid on;
     title('Mean Squared Error Attained After n=20 Repetition'); 
     ylabel('MSE (m)');
     xlabel('Regressors');    
@@ -108,77 +115,19 @@ else
     
 end
 
-figure; plot(pos_train(:,1), pos_train(:,2), 'r*'); grid on;
+figure; plot(pos_train(:, 1), pos_train(:,2), 'r*'); grid on;
 figure; plot(pos_testing(:,1), pos_testing(:,2), 'g*'); grid on; xlabel('X'), ylabel('Y'); grid on;
-    
+
 %%
-% %% Kalman     
-% [~,I] = sort(pos_testing(:,1));
-% path = create_path(pos_testing(I,:), length(pos_testing));
-% 
-% kalmanFilter_svm = configureKalmanFilter('ConstantVelocity',...
-%           path(1,:), [1 1]*1e5, [3, 3], 10);
-% kalmanFilter_lr = configureKalmanFilter('ConstantVelocity',...
-%           path(1,:), [1 1]*1e5, [3, 3], 10);
-% 
-% sse_w_kalman_svm = 0;
-% sse_wo_kalman_svm = 0;
-%       
-% sse_w_kalman_lr = 0;
-% sse_wo_kalman_lr = 0;
-% 
-% pos_testing_smooth = pos_testing(I,:);
-% testingset_normalized_smooth = testingset_normalized(I,:);
-% for i=1:length(pos_testing)
-%     predictedLocation_svm = predict(kalmanFilter_svm);
-%     predictedLocation_lr = predict(kalmanFilter_lr);
-%     
-%     [pos_predict_x, accuracy_x, prob_x] = svmpredict(pos_testing_smooth(i,1), testingset_normalized_smooth(i,:), mdl_x_svm);
-%     [pos_predict_y, accuracy_y, prob_y] = svmpredict(pos_testing_smooth(i,2), testingset_normalized_smooth(i,:), mdl_y_svm);
-%     pos_predict_x_lr = predict(mdl_x_lr, testingset_normalized_smooth(i,:));
-%     pos_predict_y_lr = predict(mdl_y_lr, testingset_normalized_smooth(i,:));
-%     
-%     corrected_svm = correct(kalmanFilter_svm, [pos_predict_x, pos_predict_y]);
-%     corrected_lr = correct(kalmanFilter_lr, [pos_predict_x_lr, pos_predict_y_lr]);
-%     
-%     figure(1);
-%     clf;
-%     scatter(path(i,1),path(i,2), 'k+'); hold on;
-%     scatter(predictedLocation_svm(1),predictedLocation_svm(2), 'bd'); hold on;
-%     scatter(pos_predict_x, pos_predict_y, 'ro'); hold on;
-%     scatter(corrected_svm(1), corrected_svm(2), 'g*');
-%     grid on; 
-%     axis([-10 30 -10 30]);
-%     legend('Ground Truth', 'Kalman Prediction', 'Observation (SVM)', 'Kalman Correction');
-%     
-%     error_w_kf = norm(pos_testing_smooth(i,:) - corrected_svm)
-%     error_wo_kf = norm(pos_testing_smooth(i,:) - [pos_predict_x, pos_predict_y]) 
-%     sse_w_kalman_svm = sse_w_kalman_svm + error_w_kf;
-%     sse_wo_kalman_svm = sse_wo_kalman_svm + error_wo_kf;
-%     title(['Error w/ KF: ', num2str(error_w_kf) , ' Error w/o KF: ', num2str(error_wo_kf)]);
-%     
-%     figure(2);
-%     clf;
-%     scatter(path(i,1),path(i,2), 'k+'); hold on;
-%     scatter(predictedLocation_lr(1),predictedLocation_lr(2), 'bd'); hold on;
-%     scatter(pos_predict_x, pos_predict_y, 'ro'); hold on;
-%     scatter(corrected_svm(1), corrected_svm(2), 'g*');
-%     grid on; 
-%     axis([-10 30 -10 30]);
-%     legend('Ground Truth', 'Kalman Prediction', 'Observation (LR)', 'Kalman Correction');
-%     
-%     error_w_kf_lr = norm(pos_testing_smooth(i,:) - corrected_lr)
-%     error_wo_kf_lr = norm(pos_testing_smooth(i,:) - [pos_predict_x_lr, pos_predict_y_lr]) 
-%     sse_w_kalman_lr = sse_w_kalman_lr + error_w_kf_lr;
-%     sse_wo_kalman_lr = sse_wo_kalman_lr + error_wo_kf_lr;
-%     title(['Error w/ KF: ', num2str(error_w_kf_lr) , ' Error w/o KF: ', num2str(error_wo_kf_lr)]);
-% end
-% %%
-% mse_wo_kalman_svm = sse_wo_kalman_svm/68;
-% mse_w_kalman_svm = sse_w_kalman_svm/68;
-% mse_wo_kalman_lr = sse_wo_kalman_lr/68;
-% mse_w_kalman_lr = sse_w_kalman_lr/68;
-% disp(mse_wo_kalman_svm);
-% disp(mse_w_kalman_svm);
-% disp(mse_wo_kalman_lr);
-% disp(mse_w_kalman_lr);
+nBins = 100;
+e_lr = sqrt((lr_results(:,1)-pos_testing(:,1)).^2 + (lr_results(:,2)-pos_testing(:,2)).^2);
+e_svm = sqrt((svm_results(:,1)-pos_testing(:,1)).^2 + (svm_results(:,2)-pos_testing(:,2)).^2);
+e_rnn = sqrt((rnn_results(:,1)-pos_testing(:,1)).^2 + (rnn_results(:,2)-pos_testing(:,2)).^2);
+e_nn = sqrt((nn_results(:,1)-pos_testing(:,1)).^2 + (nn_results(:,2)-pos_testing(:,2)).^2);
+[cdf_lr, ~, bins_lr] = localization_cdf(e_lr, nBins);
+[cdf_svm, ~, bins_svm] = localization_cdf(e_svm, nBins);
+[cdf_rnn, ~, bins_rnn] = localization_cdf(e_rnn, nBins);
+[cdf_nn, ~, bins_nn] = localization_cdf(e_nn, nBins);
+figure;
+plot(bins_rnn, cdf_rnn, 'k', bins_lr, cdf_lr, 'r', bins_svm, cdf_svm, 'g', bins_nn, cdf_nn, 'b');
+legend('RNN', 'LR', 'SVM', 'NN'); grid on;
