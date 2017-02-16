@@ -1,3 +1,3 @@
 [submodule "libsvm"]
 	path = libsvm
-	url = http://github.com/eroniki/libsvm
+	url = https://github.com/eroniki/libsvm
