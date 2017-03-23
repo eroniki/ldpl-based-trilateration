@@ -3,8 +3,7 @@
 % estimation.
 %% Clear up and close all existing figures
 clear all; close all; clc;
-%% Add path in order to use functions resides in other packages
-addpath('/home/murat/wifi_localization/wifi_regression','-frozen');
+% Set verbosity level and the flag for saving the figures
 verbose = 1;
 save_figures = 1;
 % Function Handles

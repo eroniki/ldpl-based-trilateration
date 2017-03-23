@@ -2,9 +2,9 @@
 %%% Data Processing and Visualization
 % Clear Workspace
 % Load Measurements
-load('hancock_03_09.mat')
-load('1019.mat')
-load('3032.mat')
+load('db/hancock_03_09.mat')
+load('db/1019.mat')
+load('db/3032.mat')
 % Merge measurements to create measurement space
 measurement_space = [data_1019(:,2:25); data_3032(:,2:25)];
 % Create grid labels for each measurement vector
