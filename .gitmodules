@@ -1,3 +1,0 @@
-[submodule "libsvm"]
-	path = libsvm
-	url = https://github.com/eroniki/libsvm
