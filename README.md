@@ -1,2 +1,2 @@
 # wifi_regression
-This repository contains a Linear Regression, an Linear SVM and a Neural Network implementation for location estimation with WiFi Signal.
+This repository contains a Log-distance Path Loss model-based trilateration (least square sense) method for radiolocation system. 
