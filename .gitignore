@@ -3,6 +3,9 @@
 
 libsvm/matlab/*.mexa64
 *.mat
+output/
+outputest/
+results/
 
 ### Matlab ###
 ##---------------------------------------------------
