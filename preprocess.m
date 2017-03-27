@@ -192,6 +192,8 @@ pos_node = [0, 0; 8, 0; 16, 0; 25, 0; 25, 9; 16, 9; 8, 9; 0, 9];
 pos_node_m = [0, 0; 7.2000, 0; 14.4000, 0; 22.5000, 0; 22.5000, 7.2000; 14.4000, 7.2000; 7.2000, 7.2000; 0, 7.2000];
 % Center points of grid cells
 [gcx, gcy] = grid_label_to_grid_center(1:25, 1:8);
+[grid_centers_x, grid_centers_y] = grid_label_to_grid_center(grid_labels(:,1), grid_labels(:,2));
+grid_centers = [grid_centers_x, grid_centers_y];
 %%
 % grid_labels_classifier = zeros(1543,175);
 % [rows, cols] = size(grid_labels);
@@ -218,7 +220,7 @@ propagation_maps = propagation_maps ./ n_obs;
 propagation_maps(isnan(propagation_maps)) = 0;
 %% Save Measurement Space and Grid-cell Labels
 grid_labels = grid_labels - 1;
-save('hancock_data.mat', 'data_wifi' ,'data_bt', 'data_lora', 'grid_labels_linear', 'grid_labels');
+save('hancock_data.mat', 'data_wifi' ,'data_bt', 'data_lora', 'grid_labels_linear', 'grid_labels', 'grid_centers');
 grid_labels = grid_labels + 1;
 
 %% Clear up unnecessary variables

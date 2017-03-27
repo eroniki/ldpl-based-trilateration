@@ -1,5 +1,5 @@
 %% Collective Path Loss Exponent Estimation
-n_test = 15:0.02:18;
+n_test = 0.5:0.02:18;
 e_bar = [];
 n_tested = [];
 for n=n_test

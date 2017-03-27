@@ -1,5 +1,5 @@
 %% Ind. Path Loss Exponent
-n_test = 1:0.02:8;
+n_test = 0.5:0.02:8;
 e_bar = [];
 n_tested = [];
 for n=n_test

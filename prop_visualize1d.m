@@ -20,7 +20,7 @@ y = 0.45:0.9:22.5;
 [xx, yy] = meshgrid(gcx,gcy);
 grid_centers = [xx(:),yy(:)];
 
-distq = 0.1:0.2:25.7143;
+distq = 0.1:0.5:25.7143;
 
 friis =@(Pt, lambda, d, Gt)(Pt+20*log10(lambda)+15.9636-20*log10(d)+20*log10(Gt));
 
@@ -42,11 +42,11 @@ for rf_type=1:3
         q(q==0) = NaN;
         subplot(4,2, ap);
         [d_sorted, ind] = sort(d(:,ap));
-        stem(d_sorted,  q(ind));
+        plot(d_sorted,  q(ind), '*');
 %         stem(d_sorted, smooth(q(ind)), 'r', 'LineWidth', 2);
         grid on; grid minor;
         hold on;
-        stem(distq, Pr_t);
+        plot(distq, Pr_t);
         xlabel('Distance [m]');
         ylabel('RSS [dBm]');
         title([rf_str{rf_type}, ' ', node_str{ap}]);
