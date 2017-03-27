@@ -24,15 +24,19 @@ class ldpl_based_trilateration(object):
         self.pos_node = pos_node
         self.mean_measurements = None
 
+    def calculate_path_loss(self, pt, pr):
+        return pt-pr
+
     def optimze_n(self, arg):
         pass
 
-    def ldpl(self, pr, pr_0, n, d0, rnd):
-        pr = pr_0 + 10*n*np.log10(d0/d)
-        return pr
+    def ldpl(self, pl, pl_0, n, d0, rnd):
+        pl = pl_0 + 10*n*np.log10(d0/d)
+        return pl
 
-    def get_radial_distance(self, arg):
-        pass
+    def get_radial_distance(self, pl_d, pl_d0, n, d0):
+        rand = self.create_gaussian()
+        return d0*10**((pl_d-pl_d0-rand)/(10*n))
 
     def trilateration(self, arg):
         pass
@@ -43,10 +47,17 @@ class ldpl_based_trilateration(object):
 
 class residual_analysis(object):
     """docstring for residual_analysis."""
-    def __init__(self, y, y_hat):
+    def __init__(self, **kwargs):
         super(residual_analysis, self).__init__()
-        self.y = y
-        self.y_hat = y_hat
+
+        self.error = None
+
+        for key in ('error', 'murat'):
+            if key in kwargs:
+                setattr(self, key, kwargs[key])
+
+    def calculate_errors(self, y, y_hat):
+        pass
 
     def localization_cdf(self, arg):
         pass
@@ -60,6 +71,26 @@ class residual_analysis(object):
 
     def euclidean_distance(self, arg):
         # scipy.spatial.distance.euclidean(u, v)
+        pass
+
+class visualization_tool(object):
+    """docstring for visualization_tool."""
+    def __init__(self):
+        super(visualization_tool, self).__init__()
+
+    def create_canvas_2d(self, arg):
+        pass
+
+    def create_canvas_1d(self, arg):
+        pass
+
+    def plot_nodes(self, arg):
+        pass
+
+    def plot_radial_distance(self, arg):
+        pass
+
+    def plot_position_estimate(self, arg):
         pass
 
 
