@@ -17,56 +17,82 @@ pos_n = pos_node *0.9;
 x = 1.35:0.9:7.2;
 y = 0.45:0.9:22.5;
 
-[xx, yy] = meshgrid(x,y);
+[xx, yy] = meshgrid(gcx,gcy);
 grid_centers = [xx(:),yy(:)];
 
-distq = 0.1:0.2:25;
+distq = 0.1:0.2:25.7143;
 
 friis =@(Pt, lambda, d, Gt)(Pt+20*log10(lambda)+15.9636-20*log10(d)+20*log10(Gt));
 
+[xx, yy] = grid_label_to_grid_center(grid_labels(:,1), grid_labels(:,2));
+centers = [xx,yy];
 
+d = pdist2(centers, pos_node);
+m = zeros(1543, 8, 3);
 
-for rf_type = 1:numel(rf_str)
+m(:, :, 1) = data_wifi;
+m(:, :, 2) = data_bt;
+m(:, :, 3) = data_lora;
+
+for rf_type=1:3
+    Pr_t = friis(Pt(rf_type), lambda(rf_type), distq, Gt(rf_type));
     for ap=1:8
-        d = pdist2(grid_centers, pos_node(ap,:));
-        [d_sorted, ind] = sort(d,'Ascend');
-        gx = 1:8;
-        gy = 1:25;
-        rf_ind(rf_type, ap)
-        m = propagation_maps(:, :, rf_ind(rf_type, ap));
-        m = m(:);
-        m = m(ind);
-
-        m(m==0) = NaN;
-
-        mea = nanmean(m);
-        
-        figure;
-%         subplot(2,4,ap);
-        
-        plot(d_sorted, m, 'b-.', ...
-            d_sorted, smooth(m), 'r', ...            
-            d_sorted, repmat(mea, size(d_sorted)), 'k');
-        
-        hold on;
-        
-        Pr_t = friis(Pt(rf_type), lambda(rf_type), distq, Gt(rf_type));
-        mea = mean(Pr_t);     
-        plot(distq, Pr_t, 'b', distq, repmat(mea, size(distq)), 'k');
+        figure(rf_type);
+        q = m(:, ap, rf_type);
+        q(q==0) = NaN;
+        subplot(4,2, ap);
+        [d_sorted, ind] = sort(d(:,ap));
+        stem(d_sorted,  q(ind));
+%         stem(d_sorted, smooth(q(ind)), 'r', 'LineWidth', 2);
         grid on; grid minor;
+        hold on;
+        stem(distq, Pr_t);
         xlabel('Distance [m]');
         ylabel('RSS [dBm]');
-        title([rf_str{rf_type},' ', node_str{ap}]);
+        title([rf_str{rf_type}, ' ', node_str{ap}]);
     end
 end
 
-if save_figures
-    n = get(gcf,'Number');
 
-    for i=1:n
-        saveas(i, ['output_prop/', num2str(i), '.png'],'png');
-    end
-end
+
+% for row=1:length(measurement_space)
+%     for rf_type = 1:numel(rf_str)
+% %         for ap=1:8
+%         d = pdist2(grid_centers, pos_node(ap,:));
+% 
+%         m = measurement_space(row, rf_ind(rf_type,:));
+%         m = m(:);
+% 
+%         m(m==0) = NaN;
+% 
+%         mea = nanmean(m);
+% 
+%         figure(rf_type);
+%         subplot(2,4,ap);
+% 
+%         plot(d_sorted, m, 'b-.', ...
+%             d_sorted, smooth(m), 'r', ...            
+%             d_sorted, repmat(mea, size(d_sorted)), 'k');
+% 
+%         hold on;
+% 
+%         Pr_t = friis(Pt(rf_type), lambda(rf_type), distq, Gt(rf_type));
+%         mea = mean(Pr_t);     
+%         plot(distq, Pr_t, 'b', distq, repmat(mea, size(distq)), 'k');
+%         grid on; grid minor;
+%         xlabel('Distance [m]');
+%         ylabel('RSS [dBm]');
+%         title([rf_str{rf_type},' ', node_str{ap}]);
+% %         end
+%     end
+% end
+% if save_figures
+%     n = get(gcf,'Number');
+% 
+%     for i=1:n
+%         saveas(i, ['output_prop/', num2str(i), '.png'],'png');
+%     end
+% end
 
 
 % 

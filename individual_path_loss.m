@@ -1,5 +1,5 @@
 %% Ind. Path Loss Exponent
-n_test = 1:0.2:8;
+n_test = 1:0.02:8;
 e_bar = [];
 n_tested = [];
 for n=n_test
@@ -11,8 +11,8 @@ for n=n_test
             test_point = [i,j];
             pl_vector = pl(test_point(1), test_point(2), :);
             pl_vector = pl_vector(:);
-            d_hat = ldpl(dist, pl_vector, pl_at_center, n, std_lora);
-            d = pdist2(pos_node, test_point);
+            d_hat = ldpl(dist, pl_vector, pl_at_center, n, std_measurement);
+            d = pdist2(pos_node_m, [gcx(i), gcy(j)]);
             ll = loss_localization(d,d_hat);
             e =  [e, ll];
 %             loss_map(i,j,:) = e;

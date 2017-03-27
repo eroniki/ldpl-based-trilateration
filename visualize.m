@@ -1,34 +1,34 @@
 %% Visualization 
 p = [pos_node, repmat(-20, [8,1])];
 %% 3-D
-[xx, yy] = meshgrid(1:25,1:7);
+[xx, yy] = meshgrid(1:25,1:8);
 figure;
 for i=1:8
-    subplot(4,2,i); surf(xx,yy, reshape(propagation_maps(:,:,i), [25,7])'); hold on;
+    subplot(4,2,i); surf(xx,yy, reshape(propagation_maps(:,:,i), [25,8])'); hold on;
     title(['WiFi Anchor Node:', num2str(i-1)]);
     stem3(p(:,2), p(:,1), p(:,3), 'filled', 'color', 'red');
 end
 %
 figure;
 for i=1:8
-    subplot(4,2,i); surf(xx,yy, reshape(propagation_maps(:,:,i+8), [25,7])'); hold on;
+    subplot(4,2,i); surf(xx,yy, reshape(propagation_maps(:,:,i+8), [25,8])'); hold on;
     title(['BT Anchor Node:', num2str(i-1)]);
     stem3(p(:,2), p(:,1), p(:,3));
 end
 
 figure;
 for i=1:8
-    subplot(4,2,i); surf(xx,yy, reshape(propagation_maps(:,:,i+16), [25,7])'); hold on;
+    subplot(4,2,i); surf(xx,yy, reshape(propagation_maps(:,:,i+16), [25,8])'); hold on;
     title(['LoRa Anchor Node:', num2str(i-1)]);
     stem3(p(:,2), p(:,1), p(:,3), 'filled', 'color', 'red');
 end
 %% 2-D
 for i=1:8
     figure; 
-    plot(pos_node(i,1), pos_node(i,2), 'r*'); grid on;
+    plot(pos_node(i,2), pos_node(i,1), 'r*'); grid on;
     title(['Anchor Node ', num2str(i-1), ' WiFi Propagation Map']);
     hold on;
-    imagesc(reshape(propagation_maps(:,:,i), [25,7]));   
+    imagesc(reshape(propagation_maps(:,:,i), [25,8]));   
     colorbar;
     hold off;
     view([0, -90]);
@@ -39,7 +39,7 @@ for i=9:16
     plot(pos_node(i-8,1), pos_node(i-8,2), 'r*'); grid on;
     title(['Anchor Node ', num2str(mod(i-1, 8)), ' BT Propagation Map']);
     hold on;
-    imagesc(reshape(propagation_maps(:,:,i), [25,7]));
+    imagesc(reshape(propagation_maps(:,:,i), [25,8]));
     colorbar;
     hold off;
     view([0, -90]);
@@ -50,7 +50,7 @@ for i=17:24
     plot(pos_node(i-16,1), pos_node(i-16,2), 'r*'); grid on;
     title(['Anchor Node ', num2str(mod(i-1, 8)), ' LoRa Propagation Map']);
     hold on;
-    imagesc(reshape(propagation_maps(:,:,i), [25,7]));
+    imagesc(reshape(propagation_maps(:,:,i), [25,8]));
     colorbar;
     hold off;
     view([0, -90]);

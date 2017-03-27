@@ -1,6 +1,5 @@
 %%% Hancock Hall Experiment 03/09
-%%% Data Processing and Visualization
-% Clear Workspace
+%%% Data Processing
 % Load Measurements
 load('db/hancock_03_09.mat')
 load('db/1019.mat')
@@ -177,18 +176,22 @@ grid_labels_3032(19:27,:) = repmat([23,7],[9,1]);
 grid_labels_3032(10:18,:) = repmat([24,7],[9,1]);
 grid_labels_3032(1:9,:) = repmat([25,7],[9,1]);
 % merge grid labels
+grid_labels_3032 = grid_labels_3032 + repmat([0,1], 230, 1);
+grid_labels_1019 = grid_labels_1019 + repmat([0,1], 1313, 1);
 grid_labels = [grid_labels_1019; grid_labels_3032];
-grid_labels = [grid_labels(:,2), grid_labels(:,1)];
+% grid_labels = [grid_labels(:,2), grid_labels(:,1)];
 % create spatial-propagation maps
-propagation_maps = zeros(25, 7, 24);
-n_obs = zeros(25, 7, 24);
+propagation_maps = zeros(25, 8, 24);
+n_obs = zeros(25, 8, 24);
 data_wifi = data_total(:,2:9);
 data_bt = data_total(:,10:17);
 data_lora = data_total(:,18:25);
-% the positions of the anchor nodes
-pos_node = [0,0; 0, 8; 0, 16; 0, 25; 8, 25; 8, 16; 8, 8; 8, 0];
-
-std_lora = std(data_lora);
+% The positions of nodes (For visualization purposes)
+pos_node = [0, 0; 8, 0; 16, 0; 25, 0; 25, 9; 16, 9; 8, 9; 0, 9]; 
+% The positions of nodes in meters
+pos_node_m = [0, 0; 7.2000, 0; 14.4000, 0; 22.5000, 0; 22.5000, 7.2000; 14.4000, 7.2000; 7.2000, 7.2000; 0, 7.2000];
+% Center points of grid cells
+[gcx, gcy] = grid_label_to_grid_center(1:25, 1:8);
 %%
 % grid_labels_classifier = zeros(1543,175);
 % [rows, cols] = size(grid_labels);
@@ -219,4 +222,4 @@ save('hancock_data.mat', 'data_wifi' ,'data_bt', 'data_lora', 'grid_labels_linea
 grid_labels = grid_labels + 1;
 
 %% Clear up unnecessary variables
-clear i idx data_1019 data_3032 grid_labels_1019 grid_labels_3032 n_obs grid_cell measurement_space grid
+clear i idx data_1019 data_3032 grid_labels_1019 grid_labels_3032 n_obs grid_cell grid
