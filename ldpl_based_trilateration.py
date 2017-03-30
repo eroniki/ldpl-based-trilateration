@@ -45,8 +45,13 @@ def main():
     ref_grids = np.array([[0, 2], [8, 2], [16, 2], [24, 2], [24, 6], [16, 6], [8, 6], [0, 6]])
     pos_node = np.array([[0, 0], [7.2000, 0], [14.4000, 0], [22.5000, 0], [22.5000, 7.2000], [14.4000, 7.2000], [7.2000, 7.2000], [0, 7.2000]])
 
-    mm = wifi_grids.mean_measurements(dataset.__wifi_data__, dataset.__grid_labels_by_xy__)
-    pr_ref = mm[ref_grids[:,0], ref_grids[:,1], np.arange(8)]
+    mm_wifi = wifi_grids.mean_measurements(dataset.__wifi_data__, dataset.__grid_labels_by_xy__)
+    pr_ref_wifi = mm_wifi[ref_grids[:,0], ref_grids[:,1], np.arange(8)]
+    mm_bt = bt_grids.mean_measurements(dataset.__bt_data__, dataset.__grid_labels_by_xy__)
+    pr_ref_bt = mm_bt[ref_grids[:,0], ref_grids[:,1], np.arange(8)]
+    # TODO: pr_ref_bt contains, nan values; find another reference grids for bt measurements
+    mm_lora = lora_grids.mean_measurements(dataset.__lora_data__, dataset.__grid_labels_by_xy__)
+    pr_ref_lora = mm_lora[ref_grids[:,0], ref_grids[:,1], np.arange(8)]
     center_ref = wifi_grids.centers[ref_grids[:,0], ref_grids[:,1]]
     ''' FOR DEBUGGING PURPOSES '''
     # print wifi_grids.centers.shape
@@ -57,19 +62,35 @@ def main():
     ''' The distance between the center of the reference grids and the anchor
     node positions '''
     d0 = sp.spatial.distance.cdist(center_ref, pos_node).diagonal()
-    ''' Construct the ldpl model for wifi '''
-    ldpl_wifi = ldpl_based_trilateration(measurement=dataset.__wifi_data__, \
-        grid_labels=dataset.__grid_labels_by_xy__, pt=15, pos_node=pos_node,\
-        pr_d0= pr_ref, d0=d0)
-    ldpl_wifi.mean_measurements = mm
-    print ldpl_wifi.optimize_n(n_test=np.linspace(0.5, 10, 200))
-
+    ''' The distance between the measurement point and the anchor node '''
     qq = np.vstack((wifi_grids.centers_x[dataset.__grid_labels_by_xy__[:,0]], \
         wifi_grids.centers_y[dataset.__grid_labels_by_xy__[:,1]])).transpose()
     d = sp.spatial.distance.cdist(qq, pos_node)
-    # print qq.shape, pos_node.shape, d.shape, d.diagonal().shape
-    # prop_bt = bt_grids.mean_measurements(dataset.__bt_data__, dataset.__grid_labels_by_xy__)
-    # prop_lora = lora_grids.mean_measurements(dataset.__lora_data__, dataset.__grid_labels_by_xy__)
+    ''' Construct the ldpl model for wifi '''
+    ldpl_wifi = ldpl_based_trilateration(measurement=dataset.__wifi_data__, \
+        grid_labels=dataset.__grid_labels_by_xy__, pt=15, pos_node=pos_node,\
+        pr_d0= pr_ref_wifi, d0=d0, d=d)
+    ldpl_wifi.mean_measurements = mm_wifi
+    n_test = np.linspace(0.5, 15, 200)
+    loss_wifi = ldpl_wifi.optimize_n(n_test=n_test)
+    # print loss_wifi
+    ''' Construct the ldpl model for lora '''
+    ldpl_lora = ldpl_based_trilateration(measurement=dataset.__lora_data__, \
+        grid_labels=dataset.__grid_labels_by_xy__, pt=24, pos_node=pos_node,\
+        pr_d0= pr_ref_lora, d0=d0, d=d)
+    ldpl_lora.mean_measurements = mm_lora
+    n_test = np.linspace(0.5, 15, 200)
+    loss_lora = ldpl_lora.optimize_n(n_test=n_test)
+    # print loss_lora
+    ''' Print the optimal path loss exponents '''
+    print " ".join(("min loss:", str(np.min(loss_wifi)), "argmin_loss:", str(n_test[np.argmin(loss_wifi)])))
+    print " ".join(("min loss:", str(np.min(loss_lora)), "argmin_loss:", str(n_test[np.argmin(loss_lora)])))
+    # # # print loss, np.min(loss), np.argmin(loss)
+    plt.plot(n_test, (loss_wifi), 'r', n_test, (loss_lora), 'b')
+    plt.grid(b=True, which='minor', color='r', linestyle='-', alpha=0.2)
+    # plt.ylim([350, 1000])
+    plt.minorticks_on()
+    plt.show()
 
     res_analysis = residual_analysis(error="euclidean")
 

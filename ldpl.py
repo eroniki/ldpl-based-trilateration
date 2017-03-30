@@ -5,6 +5,7 @@ import numpy as np
 import numpy.matlib
 import scipy as sp
 from scipy.stats import norm
+from scipy.optimize import minimize_scalar, minimize, least_squares
 import os
 
 import matplotlib.pyplot as plt
@@ -14,7 +15,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 class ldpl_based_trilateration(object):
     """docstring for ldpl_based_trilateration."""
-    def __init__(self, measurement, grid_labels, pos_node, pt=24, pr_d0=0, d0=0):
+    def __init__(self, measurement, grid_labels, pos_node, pt=24, pr_d0=0, d0=0, d=0):
         super(ldpl_based_trilateration, self).__init__()
         self.measurement = measurement
         self.grid_labels = grid_labels
@@ -24,22 +25,59 @@ class ldpl_based_trilateration(object):
         self.mean_measurements = None
         self.pl = self.calculate_path_loss(self.pt, self.measurement)
         self.d0 = d0
+        self.d = d;
         self.n_data, self.n_node = self.measurement.shape
+        self.n_samples = 100;
         self.rand = self.create_gaussian()
 
     def calculate_path_loss(self, pt, pr):
         return pt-pr
 
     def optimize_n(self, n_test):
-        d = np.zeros((n_test.size, self.n_data))
+        loss = np.zeros((n_test.size))
+        # mean_loss = np.zeros((n_test.size), dtype=np.float64)
         print "PL", self.pl.shape
         print "PL_d0", self.pl_d0.shape
+        # for ni in range(5):
         for ni in range(n_test.size):
+            l = 0
             for i in range(self.n_data):
                 d_hat = self.get_radial_distance(self.pl[i,:], self.pl_d0, n_test[ni], self.d0)
-                print d_hat.shape
-                # d[ni, i] = np.sum(self.localization_error(self.d, d_hat))
-        return d
+                l_i_j = self.loss(self.d[i,:], d_hat)
+                l_i= np.linalg.norm(l_i_j, axis=0)
+                l += np.mean(l_i)
+                print " ".join(("n:",str(n_test[ni]), "i:", str(i), "% done:", str(ni/n_test.size), "norm:", str(l_i.shape), "loss:", str(l)))
+            loss[ni]=l/self.n_data
+        return loss
+
+    def optimize_n_scalar(self):
+        return minimize(self.loss_sum, x0=0.5, method='TNC', bounds=((0.3,1000),), tol=0.001)
+
+    def loss_least_squares(self, n_test):
+        l = 0
+        for i in range(self.n_data):
+            d_hat = self.get_radial_distance(self.pl[i,:], self.pl_d0, n, self.d0)
+            l_i_j = self.d[i,:] - d_hat
+            l_i= np.linalg.norm(l_i_j, axis=0)
+            print self.d[i,:].shape, d_hat.shape, l_i_j.shape, l_i.shape
+            l += np.mean(l_i)
+
+    def optimize_n_least_squares(self):
+        return least_squares(self.loss_least_squares, x0=0.5)
+
+    def loss_sum(self, n):
+        l = 0
+        for i in range(self.n_data):
+            d_hat = self.get_radial_distance(self.pl[i,:], self.pl_d0, n, self.d0)
+            l_i_j = self.loss(self.d[i,:], d_hat)
+            l_i= np.linalg.norm(l_i_j, axis=0)
+            # print self.d[i,:].shape, d_hat.shape, l_i_j.shape, l_i.shape
+            l += np.mean(l_i)
+            # print " ".join(("n:",str(n_test[ni]), "i:", str(i), "% done:", str(ni/n_test.size),  "loss_i:", str(l_i), "loss:", str(l)))
+        return l
+
+    def loss(self, d, d_hat):
+        return (d-d_hat)**2
 
     def ldpl(self, pl, pl_0, n, d0, rnd):
         pl = pl_0 + 10*n*np.log10(d0/d)
@@ -55,16 +93,27 @@ class ldpl_based_trilateration(object):
         # print "d0", d0, "d0 shape", d0.shape
         # return d0*10**((pl_d-pl_d0-rand)/(10*n))
         # print .shape
-        return (d0*10**((pl_d-pl_d0-rand)/(10*n))).transpose()
+        return (d0*10**((pl_d-pl_d0-rand)/(10*n)))
 
     def trilateration(self, arg):
         pass
 
     def create_gaussian(self):
-        x = np.linspace(-4,4,100)
+        x = np.linspace(-4,4,self.n_samples)
         return norm.pdf(x)
 
     ''' Properties '''
+    def d():
+        doc = "The d property."
+        def fget(self):
+            return self._d
+        def fset(self, value):
+            self._d = value
+        def fdel(self):
+            del self._d
+        return locals()
+    d = property(**d())
+
     def d0():
         doc = "The d0 property."
         def fget(self):
@@ -265,6 +314,18 @@ class visualization_tool(object):
     """docstring for visualization_tool."""
     def __init__(self):
         super(visualization_tool, self).__init__()
+        plt.ion()
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(1,1,1)
+        plt.minorticks_on()
+        # plt.show()
+
+    def plot_loss(self, n, loss):
+        #
+        # divider = make_axes_locatable(ax)
+        # cax = divider.append_axes('right', size='5%', pad=0.05)
+        _ = self.ax.plot(n, loss)
+        # return fig
 
     def create_canvas_2d(self, arg):
         pass
