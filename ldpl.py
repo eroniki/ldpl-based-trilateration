@@ -4,10 +4,8 @@ from __future__ import division
 import numpy as np
 import numpy.matlib
 import scipy as sp
+from scipy.stats import norm
 import os
-
-from sklearn import mixture
-from sklearn.manifold import TSNE
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -16,7 +14,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 class ldpl_based_trilateration(object):
     """docstring for ldpl_based_trilateration."""
-    def __init__(self, measurement, grid_labels, pos_node, pt=24, pr_d0=0):
+    def __init__(self, measurement, grid_labels, pos_node, pt=24, pr_d0=0, d0=0):
         super(ldpl_based_trilateration, self).__init__()
         self.measurement = measurement
         self.grid_labels = grid_labels
@@ -24,22 +22,40 @@ class ldpl_based_trilateration(object):
         self.pl_d0 = self.pt - pr_d0;
         self.pos_node = pos_node
         self.mean_measurements = None
-        self.pl = calculate_path_loss(self.self.measurement)
-
+        self.pl = self.calculate_path_loss(self.pt, self.measurement)
+        self.d0 = d0
+        self.n_data, self.n_node = self.measurement.shape
+        self.rand = self.create_gaussian()
 
     def calculate_path_loss(self, pt, pr):
         return pt-pr
 
-    def optimze_n(self, arg):
-        pass
+    def optimize_n(self, n_test):
+        d = np.zeros((n_test.size, self.n_data))
+        print "PL", self.pl.shape
+        print "PL_d0", self.pl_d0.shape
+        for ni in range(n_test.size):
+            for i in range(self.n_data):
+                d_hat = self.get_radial_distance(self.pl[i,:], self.pl_d0, n_test[ni], self.d0)
+                print d_hat.shape
+                # d[ni, i] = np.sum(self.localization_error(self.d, d_hat))
+        return d
 
     def ldpl(self, pl, pl_0, n, d0, rnd):
         pl = pl_0 + 10*n*np.log10(d0/d)
         return pl
 
     def get_radial_distance(self, pl_d, pl_d0, n, d0):
-        rand = self.create_gaussian()
-        return d0*10**((pl_d-pl_d0-rand)/(10*n))
+        # print rand.shape
+        rand = np.matlib.repmat(self.rand, pl_d0.size, 1).transpose()
+        # print rand.shape
+        # print "pl", pl_d.shape
+        # print "pl_d0", pl_d0.shape
+        # print "n", n
+        # print "d0", d0, "d0 shape", d0.shape
+        # return d0*10**((pl_d-pl_d0-rand)/(10*n))
+        # print .shape
+        return (d0*10**((pl_d-pl_d0-rand)/(10*n))).transpose()
 
     def trilateration(self, arg):
         pass
@@ -49,6 +65,17 @@ class ldpl_based_trilateration(object):
         return norm.pdf(x)
 
     ''' Properties '''
+    def d0():
+        doc = "The d0 property."
+        def fget(self):
+            return self._d0
+        def fset(self, value):
+            self._d0 = value
+        def fdel(self):
+            del self._d0
+        return locals()
+    d0 = property(**d0())
+
     def pl_d0():
         doc = "The pl_d0 property."
         def fget(self):
@@ -58,7 +85,8 @@ class ldpl_based_trilateration(object):
         def fdel(self):
             del self._pl_d0
         return locals()
-        pl_d0 = property(**pl_d0())
+    pl_d0 = property(**pl_d0())
+
     def pl():
         doc = "The pl property."
         def fget(self):
@@ -68,7 +96,7 @@ class ldpl_based_trilateration(object):
         def fdel(self):
             del self._pl
         return locals()
-        pl = property(**pl())
+    pl = property(**pl())
 
     def measurement():
         doc = "The measurement property."
@@ -135,8 +163,8 @@ class grid_cells(object):
         gcx = sx/2 + x*sx
         gcy = sy/2 + y*sy
         xx, yy = np.meshgrid(gcx, gcy)
-        # print np.vstack((xx.ravel(), yy.ravel())).T.shape
-        centers = np.vstack((xx.ravel(), yy.ravel())).T.reshape((nx, ny, 2))
+
+        centers = np.vstack((xx.ravel(order='F'), yy.ravel(order='F'))).transpose().reshape(nx,ny,2)
         return (gcx, gcy, centers)
 
     def centers():
@@ -254,7 +282,7 @@ class visualization_tool(object):
         pass
 
 
-def main(arg):
+def main():
     pass
 
 if __name__ == "__main__":
