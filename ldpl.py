@@ -44,9 +44,10 @@ class ldpl_based_trilateration(object):
             for i in range(self.n_data):
                 d_hat = self.get_radial_distance(self.pl[i,:], self.pl_d0, n_test[ni], self.d0)
                 l_i_j = self.loss(self.d[i,:], d_hat)
-                l_i= np.linalg.norm(l_i_j, axis=0)
-                l += np.mean(l_i)
-                print " ".join(("n:",str(n_test[ni]), "i:", str(i), "% done:", str(ni/n_test.size), "norm:", str(l_i.shape), "loss:", str(l)))
+                l_i= np.nanmin(l_i_j, axis=0)
+                l += np.sum(l_i)
+                # print n_test.size, d_hat.shape, l_i_j.shape, l_i.shape, l_i
+                print " ".join(("n:",str(n_test[ni]), "i:", str(i), "% done:", str((ni+1)/n_test.size), "norm:", str(l_i.shape), "loss:", str(np.sum(l_i))))
             loss[ni]=l/self.n_data
         return loss
 

@@ -29,10 +29,52 @@ def print_dataset_shapes(dataset):
     print "Min and Max X Label: ", np.amin(dataset.__grid_labels_by_xy__[:,0]), np.amax(dataset.__grid_labels_by_xy__[:,0])
     print "Min and Max Y Label: ", np.amin(dataset.__grid_labels_by_xy__[:,1]), np.amax(dataset.__grid_labels_by_xy__[:,1])
 
+def lora(dataset, pos_node_vis, ref_gridss, pos_node):
+    ''' The grid objects representing the measurements and grid centers '''
+    grids = grid_cells()
+    ''' Mean measurements collected at the center of the grid cell '''
+    mm = grids.mean_measurements(dataset.__lora_data__, dataset.__grid_labels_by_xy__)
+    ''' The reference grid centers (in order to calculated d0 and PL_d0) '''
+    pr_ref = mm[ref_grids[:,0], ref_grids[:,1], np.arange(8)]
+    ''' The center of the grid cells '''
+    center_ref = grids.centers[ref_grids[:,0], ref_grids[:,1]]
+    d0 = sp.spatial.distance.cdist(center_ref, pos_node).diagonal()
+    ''' The distance between the measurement point and the anchor node '''
+    qq = np.vstack((grids.centers_x[dataset.__grid_labels_by_xy__[:,0]], \
+        grids.centers_y[dataset.__grid_labels_by_xy__[:,1]])).transpose()
+    d = sp.spatial.distance.cdist(qq, pos_node)
+    ''' Construct the ldpl model for wifi '''
+    ldpl = ldpl_based_trilateration(measurement=dataset.__wifi_data__, \
+        grid_labels=dataset.__grid_labels_by_xy__, pt=24, pos_node=pos_node,\
+        pr_d0= pr_ref_wifi, d0=d0, d=d)
+    ldpl.mean_measurements = mm
+    n_test = np.linspace(0.5, 15, 200)
+    loss = ldpl.optimize_n(n_test=n_test)
+
+def wifi(dataset, pos_node_vis, ref_gridss, pos_node):
+    ''' The grid objects representing the measurements and grid centers '''
+    grids = grid_cells()
+    ''' Mean measurements collected at the center of the grid cell '''
+    mm = grids.mean_measurements(dataset.__wifi_data__, dataset.__grid_labels_by_xy__)
+    ''' The reference grid centers (in order to calculated d0 and PL_d0) '''
+    pr_ref = mm[ref_grids[:,0], ref_grids[:,1], np.arange(8)]
+    ''' The center of the grid cells '''
+    center_ref = grids.centers[ref_grids[:,0], ref_grids[:,1]]
+    d0 = sp.spatial.distance.cdist(center_ref, pos_node).diagonal()
+    ''' The distance between the measurement point and the anchor node '''
+    qq = np.vstack((grids.centers_x[dataset.__grid_labels_by_xy__[:,0]], \
+        grids.centers_y[dataset.__grid_labels_by_xy__[:,1]])).transpose()
+    d = sp.spatial.distance.cdist(qq, pos_node)
+    ''' Construct the ldpl model for wifi '''
+    ldpl = ldpl_based_trilateration(measurement=dataset.__wifi_data__, \
+        grid_labels=dataset.__grid_labels_by_xy__, pt=15, pos_node=pos_node,\
+        pr_d0= pr_ref_wifi, d0=d0, d=d)
+    ldpl.mean_measurements = mm
+    n_test = np.linspace(0.5, 15, 200)
+    loss = ldpl.optimize_n(n_test=n_test)
+
+
 def main():
-    wifi_grids = grid_cells()
-    bt_grids = grid_cells()
-    lora_grids = grid_cells()
     fname_dataset = "hancock_data.mat"
     fname_model = "grid_classifier.h5"
     folderLocation = os.path.dirname(os.path.realpath(__file__))
@@ -50,9 +92,6 @@ def main():
     mm_bt = bt_grids.mean_measurements(dataset.__bt_data__, dataset.__grid_labels_by_xy__)
     pr_ref_bt = mm_bt[ref_grids[:,0], ref_grids[:,1], np.arange(8)]
     # TODO: pr_ref_bt contains, nan values; find another reference grids for bt measurements
-    mm_lora = lora_grids.mean_measurements(dataset.__lora_data__, dataset.__grid_labels_by_xy__)
-    pr_ref_lora = mm_lora[ref_grids[:,0], ref_grids[:,1], np.arange(8)]
-    center_ref = wifi_grids.centers[ref_grids[:,0], ref_grids[:,1]]
     ''' FOR DEBUGGING PURPOSES '''
     # print wifi_grids.centers.shape
     # print "grid centers\n", wifi_grids.centers
