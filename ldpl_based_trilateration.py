@@ -87,10 +87,6 @@ def main():
     ref_grids = np.array([[0, 2], [8, 2], [16, 2], [24, 2], [24, 6], [16, 6], [8, 6], [0, 6]])
     pos_node = np.array([[0, 0], [7.2000, 0], [14.4000, 0], [22.5000, 0], [22.5000, 7.2000], [14.4000, 7.2000], [7.2000, 7.2000], [0, 7.2000]])
 
-    mm_wifi = wifi_grids.mean_measurements(dataset.__wifi_data__, dataset.__grid_labels_by_xy__)
-    pr_ref_wifi = mm_wifi[ref_grids[:,0], ref_grids[:,1], np.arange(8)]
-    mm_bt = bt_grids.mean_measurements(dataset.__bt_data__, dataset.__grid_labels_by_xy__)
-    pr_ref_bt = mm_bt[ref_grids[:,0], ref_grids[:,1], np.arange(8)]
     # TODO: pr_ref_bt contains, nan values; find another reference grids for bt measurements
     ''' FOR DEBUGGING PURPOSES '''
     # print wifi_grids.centers.shape
