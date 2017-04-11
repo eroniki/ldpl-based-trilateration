@@ -47,35 +47,12 @@ class ldpl_based_trilateration(object):
                 l_i= np.nanmin(l_i_j, axis=0)
                 l += np.sum(l_i)
                 # print n_test.size, d_hat.shape, l_i_j.shape, l_i.shape, l_i
-                print " ".join(("n:",str(n_test[ni]), "i:", str(i), "% done:", str((ni+1)/n_test.size), "norm:", str(l_i.shape), "loss:", str(np.sum(l_i))))
+            print " ".join(("n:", str(n_test[ni]), "%:", str((ni+1)/n_test.size), "loss:", str(l)))
             loss[ni]=l/self.n_data
         return loss
 
-    def optimize_n_scalar(self):
-        return minimize(self.loss_sum, x0=0.5, method='TNC', bounds=((0.3,1000),), tol=0.001)
-
-    def loss_least_squares(self, n_test):
-        l = 0
-        for i in range(self.n_data):
-            d_hat = self.get_radial_distance(self.pl[i,:], self.pl_d0, n, self.d0)
-            l_i_j = self.d[i,:] - d_hat
-            l_i= np.linalg.norm(l_i_j, axis=0)
-            print self.d[i,:].shape, d_hat.shape, l_i_j.shape, l_i.shape
-            l += np.mean(l_i)
-
     def optimize_n_least_squares(self):
         return least_squares(self.loss_least_squares, x0=0.5)
-
-    def loss_sum(self, n):
-        l = 0
-        for i in range(self.n_data):
-            d_hat = self.get_radial_distance(self.pl[i,:], self.pl_d0, n, self.d0)
-            l_i_j = self.loss(self.d[i,:], d_hat)
-            l_i= np.linalg.norm(l_i_j, axis=0)
-            # print self.d[i,:].shape, d_hat.shape, l_i_j.shape, l_i.shape
-            l += np.mean(l_i)
-            # print " ".join(("n:",str(n_test[ni]), "i:", str(i), "% done:", str(ni/n_test.size),  "loss_i:", str(l_i), "loss:", str(l)))
-        return l
 
     def loss(self, d, d_hat):
         return (d-d_hat)**2
