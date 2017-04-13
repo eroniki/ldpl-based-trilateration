@@ -49,11 +49,31 @@ def lora(dataset, pos_node_vis, ref_grids, pos_node):
         pr_d0= pr_ref, d0=d0, d=d)
     ldpl.mean_measurements = mm
     n_test = np.linspace(0.5, 15, 200)
-    loss = ldpl.optimize_n(n_test=n_test)
+    # loss = ldpl.optimize_n(n_test=n_test)
+    loss = 0
+    popt, pcov = ldpl.curve_fit()
+    print popt, pcov
     ''' Print the optimal path loss exponents '''
     print " ".join(("min loss:", str(np.min(loss)), "argmin_loss:", str(n_test[np.argmin(loss)])))
+    # r = ldpl.ldpl(ldpl.pl, ldpl.pl_d0, popt, ldpl.d0, ldpl.rand)
+    d_hat = np.zeros((1543, 1000, 8))
+    for i in range(ldpl.n_data):
+        d_hat[i, :, :] = ldpl.get_radial_distance(ldpl.pl[i,:], ldpl.pl_d0, popt, ldpl.d0)
+    print d_hat[0,:,:].shape
+    x_hat = np.zeros((1543,2, 1000))
+    for i in range(1543):
+        x_hat[i,:, :] = ldpl.trilateration(pos_node, d_hat[i,:,:])
+        gt = np.vstack((grids.centers_x[dataset.__grid_labels_by_xy__[i,0]], \
+            grids.centers_y[dataset.__grid_labels_by_xy__[i,1]])).transpose()
+        d = sp.spatial.distance.cdist(qq, pos_node)
+        print " ".join(("x_hat:", str(np.mean(x_hat, axis=1)), "gt:", str(gt)))
+    qq = np.vstack((grids.centers_x[dataset.__grid_labels_by_xy__[:,0]], \
+        grids.centers_y[dataset.__grid_labels_by_xy__[:,1]])).transpose()
+    e =  x_hat - qq
+    # e = sp.spatial.distance.cdist(x_hat, np.vstack((grids.centers_x[dataset.__grid_labels_by_xy__[:,0]], \
+    #     grids.centers_y[dataset.__grid_labels_by_xy__[:,1]])).transpose())
+    print np.mean(e), np.max(e), np.min(e)
     return n_test, loss
-
 
 def wifi(dataset, pos_node_vis, ref_grids, pos_node):
     ''' The grid objects representing the measurements and grid centers '''
@@ -74,8 +94,10 @@ def wifi(dataset, pos_node_vis, ref_grids, pos_node):
         grid_labels=dataset.__grid_labels_by_xy__, pt=15, pos_node=pos_node,\
         pr_d0= pr_ref, d0=d0, d=d)
     ldpl.mean_measurements = mm
-    n_test = np.linspace(0.5, 15, 200)
+    n_test = np.linspace(0.5, 200, 200)
     loss = ldpl.optimize_n(n_test=n_test)
+    popt, pcov = ldpl.curve_fit()
+    print popt, pcov
     ''' Print the optimal path loss exponents '''
     print " ".join(("min loss:", str(np.min(loss)), "argmin_loss:", str(n_test[np.argmin(loss)])))
     return n_test, loss
@@ -100,15 +122,15 @@ def main():
     # print "center_ref\n", center_ref
     # print "ref grids\n", ref_grids
     # print "d0\n", d0
-    n_test, loss = lora(dataset, pos_node_vis, ref_grids, pos_node)
-    # # # print loss, np.min(loss), np.argmin(loss)
-    plt.plot(n_test, loss, 'r-.')
-    plt.grid(b=True, which='minor', color='r', linestyle='-', alpha=0.2)
+    n_test_lora, loss_lora = lora(dataset, pos_node_vis, ref_grids, pos_node)
+    # n_test_wifi, loss_wifi = wifi(dataset, pos_node_vis, ref_grids, pos_node)
+    # plt.plot(n_test_lora, loss_lora, 'b', n_test_wifi, loss_wifi, 'g')
+    # plt.grid(b=True, which='minor', color='r', linestyle='-', alpha=0.2)
     # plt.ylim([350, 1000])
-    plt.minorticks_on()
-    plt.show()
-
-    res_analysis = residual_analysis(error="euclidean")
+    # plt.minorticks_on()
+    # plt.show()
+    #
+    # res_analysis = residual_analysis(error="euclidean")
 
 if __name__ == "__main__":
     main()
