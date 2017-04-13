@@ -17,7 +17,14 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 class ldpl_based_trilateration(object):
     """docstring for ldpl_based_trilateration."""
 
-    def __init__(self, measurement, grid_labels, pos_node, pt=24, pr_d0=0, d0=0, d=0):
+    def __init__(self,
+                 measurement,
+                 grid_labels,
+                 pos_node,
+                 pt=24,
+                 pr_d0=0,
+                 d0=0,
+                 d=0):
         super(ldpl_based_trilateration, self).__init__()
         self.measurement = measurement
         self.grid_labels = grid_labels
@@ -44,24 +51,29 @@ class ldpl_based_trilateration(object):
         for ni in range(n_test.size):
             l = 0
             for i in range(self.n_data):
-                d_hat = self.get_radial_distance(self.pl[i, :], self.pl_d0, n_test[ni], self.d0)
+                d_hat = self.get_radial_distance(
+                    self.pl[i, :], self.pl_d0, n_test[ni], self.d0)
                 l_i_j = self.loss(self.d[i, :], d_hat)
                 l_i = np.nanmin(l_i_j, axis=0)
                 l += np.sum(l_i)
                 # print n_test.size, d_hat.shape, l_i_j.shape, l_i.shape, l_i
-            print " ".join(("n:", str(n_test[ni]), "%:", str((ni + 1) / n_test.size), "loss:", str(l)))
+            print " ".join(("n:", str(n_test[ni]), "%:",
+                            str((ni + 1) / n_test.size), "loss:", str(l)))
             loss[ni] = l / self.n_data
         return loss
 
     def curve_fit(self):
-        print " ".join(("pl_d: ", str(self.pl.shape), "pl_d0:", str(self.pl_d0.shape), "d0: ", str(self.d0.shape)))
+        print " ".join(("pl_d: ", str(self.pl.shape), "pl_d0:",
+                        str(self.pl_d0.shape), "d0: ", str(self.d0.shape)))
         pl_d0_rep = np.matlib.repmat(self.pl_d0, 1543, 1)
         d0_rep = np.matlib.repmat(self.d0, 1543, 1)
-        print " ".join(("pl_d: ", str(self.pl.shape), "pl_d0_rep:", str(pl_d0_rep.shape), "d0_rep: ", str(d0_rep.shape)))
+        print " ".join(("pl_d: ", str(self.pl.shape), "pl_d0_rep:",
+                        str(pl_d0_rep.shape), "d0_rep: ", str(d0_rep.shape)))
         pl_d0_rep = pl_d0_rep.ravel()
         d0_rep = d0_rep.ravel()
         pl_rep = self.pl.ravel()
-        print " ".join(("pld: ", str(pl_rep.shape), "pld0:", str(pl_d0_rep.shape), "d0_rep:", str(d0_rep.shape)))
+        print " ".join(("pld: ", str(pl_rep.shape), "pld0:",
+                        str(pl_d0_rep.shape), "d0_rep:", str(d0_rep.shape)))
         xdata = np.array([pl_rep, pl_d0_rep, d0_rep])
         print " ".join(("xdata:", str(xdata.shape)))
         # self.d_hat(xdata, 6)
@@ -74,7 +86,9 @@ class ldpl_based_trilateration(object):
         pl_d0 = x[1, :].ravel()
         d0 = x[2, :].ravel()
         rand = np.matlib.repmat(self.rand, 12344, 1).transpose()
-        print " ".join(("d_hat", "pl_d:", str(pl_d.shape), "pl_d0:", str(pl_d0.shape), "d0:", str(d0.shape), "rand", str(rand.shape)))
+        print " ".join(("d_hat", "pl_d:", str(pl_d.shape), "pl_d0:",
+                        str(pl_d0.shape), "d0:", str(d0.shape), "rand",
+                        str(rand.shape)))
         d_hat = np.nanmin(d0 * 10**((pl_d - pl_d0 - rand) / (10 * n)), axis=0)
         print np.count_nonzero(np.isnan(d_hat)), d_hat.shape
         return d_hat
@@ -84,12 +98,15 @@ class ldpl_based_trilateration(object):
     def jac(self, x, n):
         ''' x = [pl_d, pl_d0, d0] '''
         rand = self.rand.reshape((self.n_samples, 1))
-        dpld = x[2, :] * np.log(10) / (10 * n) * 10**((x[0, :] - x[1, :] - rand) / (10 * n))
-        dpld0 = -1 * x[2, :] * np.log(10) / (10 * n) * 10**((x[0, :] - x[1, :] - rand) / (10 * n))
+        dpld = x[2, :] * np.log(10) / (10 * n) * \
+            10**((x[0, :] - x[1, :] - rand) / (10 * n))
+        dpld0 = -1 * x[2, :] * np.log(10) / (10 * n) * \
+            10**((x[0, :] - x[1, :] - rand) / (10 * n))
         dd0 = 10**((x[0, :] - x[1, :] - rand) / (10 * n))
-        dn = x[2] * np.log(10) * 10**((x[0, :] - x[1, :] - rand) / (10 * n)) * \
+        dn = x[2] * np.log(10) * 10**((x[0, :] - x[1, :] - rand) / (10 * n)) *\
             (x[0, :] - x[1, :] - rand) / 20 * n**-2
-        print " ".join(("dpld:", str(dpld.shape), "dpld0:", str(dpld0.shape), "dd0:", str(dd0.shape), "dn:", str(dn.shape)))
+        print " ".join(("dpld:", str(dpld.shape), "dpld0:", str(dpld0.shape),
+                        "dd0:", str(dd0.shape), "dn:", str(dn.shape)))
         return np.array([[dpld, dpld0, dd0], [dn]], np.float64)
 
     def optimize_n_least_squares(self):
@@ -115,7 +132,8 @@ class ldpl_based_trilateration(object):
         return (d0 * 10**((pl_d - pl_d0 - rand) / (10 * n)))
 
     def trilateration(self, pos_node, d_hat):
-        d = sp.spatial.distance.cdist(pos_node[1:, :], pos_node[0, :].reshape((1, 2)))
+        d = sp.spatial.distance.cdist(
+            pos_node[1:, :], pos_node[0, :].reshape((1, 2)))
         ''' Delete the first row '''
         r1 = d_hat[:, 0].reshape(self.n_samples, 1)
         r = r1**2 - d_hat[:, 1:]**2

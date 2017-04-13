@@ -5,7 +5,7 @@ import numpy as np
 import numpy.matlib
 import scipy as sp
 from scipy.stats import norm
-from scipy.optimize import minimize_scalar, minimize, least_squares
+from scipy.optimize import minimize_scalar, minimize, least_squares, curve_fit
 import os
 
 import matplotlib.pyplot as plt
@@ -27,7 +27,7 @@ class ldpl_based_trilateration(object):
         self.d0 = d0
         self.d = d;
         self.n_data, self.n_node = self.measurement.shape
-        self.n_samples = 100;
+        self.n_samples = 1000;
         self.rand = self.create_gaussian()
 
     def calculate_path_loss(self, pt, pr):
@@ -51,6 +51,43 @@ class ldpl_based_trilateration(object):
             loss[ni]=l/self.n_data
         return loss
 
+    def curve_fit(self):
+        print " ".join(("pl_d: ", str(self.pl.shape), "pl_d0:", str(self.pl_d0.shape), "d0: ", str(self.d0.shape)))
+        pl_d0_rep = np.matlib.repmat(self.pl_d0, 1543, 1)
+        d0_rep = np.matlib.repmat(self.d0, 1543, 1)
+        print " ".join(("pl_d: ", str(self.pl.shape), "pl_d0_rep:", str(pl_d0_rep.shape), "d0_rep: ", str(d0_rep.shape)))
+        pl_d0_rep = pl_d0_rep.ravel()
+        d0_rep = d0_rep.ravel()
+        pl_rep = self.pl.ravel()
+        print " ".join(("pld: ", str(pl_rep.shape), "pld0:", str(pl_d0_rep.shape), "d0_rep:", str(d0_rep.shape)))
+        xdata = np.array([pl_rep, pl_d0_rep, d0_rep])
+        print " ".join(("xdata:", str(xdata.shape)))
+        # self.d_hat(xdata, 6)
+        popt, pcov = curve_fit(self.d_hat, xdata, self.d.ravel())
+        return popt, pcov
+
+    def d_hat(self, x, n):
+        '''  x = [pl_d (nx8), pl_d0 (nx8), d0 (nx8)] '''
+        pl_d = x[0, :].ravel()
+        pl_d0 = x[1, :].ravel()
+        d0 = x[2, :].ravel()
+        rand = np.matlib.repmat(self.rand, 12344, 1).transpose()
+        print " ".join(("d_hat", "pl_d:", str(pl_d.shape), "pl_d0:", str(pl_d0.shape), "d0:", str(d0.shape), "rand", str(rand.shape)))
+        d_hat = np.nanmin(d0*10**((pl_d - pl_d0 - rand)/(10*n)), axis=0)
+        print np.count_nonzero(np.isnan(d_hat)), d_hat.shape
+        return d_hat
+
+    ''' TODO: Gotta think about it thoroughly! '''
+    def jac(self, x, n):
+        ''' x = [pl_d, pl_d0, d0] '''
+        rand = self.rand.reshape((self.n_samples,1))
+        dpld = x[2, :] * np.log(10) / (10*n) * 10**((x[0, :]-x[1, :]-rand)/(10*n))
+        dpld0 = -1*x[2, :] * np.log(10) / (10*n) * 10**((x[0, :]-x[1, :]-rand)/(10*n))
+        dd0 = 10**((x[0, :]-x[1, :]-rand)/(10*n))
+        dn = x[2] * np.log(10) * 10**((x[0, :]-x[1, :]-rand)/(10*n)) * (x[0, :]-x[1, :]-rand)/20 * n**-2
+        print " ".join(("dpld:", str(dpld.shape), "dpld0:", str(dpld0.shape), "dd0:", str(dd0.shape), "dn:", str(dn.shape)))
+        return np.array([[dpld, dpld0, dd0], [dn]], np.float64)
+
     def optimize_n_least_squares(self):
         return least_squares(self.loss_least_squares, x0=0.5)
 
@@ -73,8 +110,18 @@ class ldpl_based_trilateration(object):
         # print .shape
         return (d0*10**((pl_d-pl_d0-rand)/(10*n)))
 
-    def trilateration(self, arg):
-        pass
+    def trilateration(self, pos_node, d_hat):
+        d = sp.spatial.distance.cdist(pos_node[1:,:],pos_node[0,:].reshape((1,2)))
+        ''' Delete the first row '''
+        r1 = d_hat[:,0].reshape(self.n_samples, 1)
+        r = r1**2 - d_hat[:,1:]**2
+        b = 0.5*(r.transpose() + d **2)
+        ''' Delete the first row '''
+        A = pos_node[1:,:] - pos_node[0,:]
+        temp = np.linalg.pinv(A).dot(b)
+        temp2 = np.linalg.pinv(A).dot(b) + pos_node[0,:].reshape(2,1)
+        print A.shape, b.shape, temp.shape, temp2.shape
+        return np.linalg.pinv(A).dot(b) + pos_node[0,:].reshape(2,1)
 
     def create_gaussian(self):
         x = np.linspace(-4,4,self.n_samples)

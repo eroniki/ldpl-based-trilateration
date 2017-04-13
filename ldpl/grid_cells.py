@@ -25,8 +25,8 @@ class grid_cells(object):
         self.sy = sy
         self.n_node = n_node
         self.cells = np.zeros((self.nx, self.ny, self.n_node))
-        self.centers_x, self.centers_y, self.centers = self.create_grid_centers(
-            self.nx, self.ny, self.sx, self.sy)
+        self.centers_x, self.centers_y, self.centers = \
+            self.create_grid_centers(self.nx, self.ny, self.sx, self.sy)
 
     def mean_measurements(self, measurements, labels):
         n_obs = np.zeros_like(self.cells)
