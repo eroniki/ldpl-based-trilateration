@@ -13,13 +13,15 @@ import matplotlib.cm as cm
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+
 class visualization_tool(object):
     """docstring for visualization_tool."""
+
     def __init__(self):
         super(visualization_tool, self).__init__()
         plt.ion()
         self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(1,1,1)
+        self.ax = self.fig.add_subplot(1, 1, 1)
         plt.minorticks_on()
         # plt.show()
 
@@ -48,6 +50,7 @@ class visualization_tool(object):
 
 def main():
     pass
+
 
 if __name__ == "__main__":
     main()

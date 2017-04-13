@@ -13,8 +13,10 @@ import matplotlib.cm as cm
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+
 class residual_analysis(object):
     """docstring for residual_analysis."""
+
     def __init__(self, **kwargs):
         super(residual_analysis, self).__init__()
 
@@ -40,9 +42,11 @@ class residual_analysis(object):
     def euclidean_distance(self, arg):
         # scipy.spatial.distance.euclidean(u, v)
         pass
-        
+
+
 def main():
     pass
+
 
 if __name__ == "__main__":
     main()
