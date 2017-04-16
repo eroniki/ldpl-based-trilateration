@@ -142,7 +142,7 @@ class ldpl_based_trilateration(object):
         A = pos_node[1:, :] - pos_node[0, :]
         temp = np.linalg.pinv(A).dot(b)
         temp2 = np.linalg.pinv(A).dot(b) + pos_node[0, :].reshape(2, 1)
-        print A.shape, b.shape, temp.shape, temp2.shape
+        # print A.shape, b.shape, temp.shape, temp2.shape
         return np.linalg.pinv(A).dot(b) + pos_node[0, :].reshape(2, 1)
 
     def create_gaussian(self):
