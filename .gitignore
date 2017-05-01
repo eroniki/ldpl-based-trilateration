@@ -144,3 +144,9 @@ output_prop/
 asda/
 
 wifi_data\.py
+
+wifi_output/
+
+lora_output/
+
+bt_output/
