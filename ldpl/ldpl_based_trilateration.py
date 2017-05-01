@@ -1,17 +1,13 @@
 #!/usr/bin/python
+# coding=utf8
 from __future__ import division
 
 import numpy as np
 import numpy.matlib
 import scipy as sp
+
 from scipy.stats import norm
 from scipy.optimize import minimize_scalar, minimize, least_squares, curve_fit
-import os
-
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-from mpl_toolkits.mplot3d import Axes3D
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 class ldpl_based_trilateration(object):
@@ -37,7 +33,6 @@ class ldpl_based_trilateration(object):
         self.d = d
         self.n_data, self.n_node = self.measurement.shape
         self.n_samples = 1000
-        self.rand = self.create_gaussian()
 
     def calculate_path_loss(self, pt, pr):
         return pt - pr
@@ -49,13 +44,13 @@ class ldpl_based_trilateration(object):
         print "PL_d0", self.pl_d0.shape
         # for ni in range(5):
         for ni in range(n_test.size):
-            l = 0
+            loss_sum = 0
             for i in range(self.n_data):
                 d_hat = self.get_radial_distance(
                     self.pl[i, :], self.pl_d0, n_test[ni], self.d0)
                 l_i_j = self.loss(self.d[i, :], d_hat)
                 l_i = np.nanmin(l_i_j, axis=0)
-                l += np.sum(l_i)
+                loss_sum += np.sum(l_i)
                 # print n_test.size, d_hat.shape, l_i_j.shape, l_i.shape, l_i
             print " ".join(("n:", str(n_test[ni]), "%:",
                             str((ni + 1) / n_test.size), "loss:", str(l)))
@@ -77,15 +72,17 @@ class ldpl_based_trilateration(object):
         xdata = np.array([pl_rep, pl_d0_rep, d0_rep])
         print " ".join(("xdata:", str(xdata.shape)))
         # self.d_hat(xdata, 6)
-        popt, pcov = curve_fit(self.d_hat, xdata, self.d.ravel())
+        popt, pcov = curve_fit(
+            self.d_hat, xdata, self.d.ravel(), bounds=([0, 0], [2000, 5]))
         return popt, pcov
 
-    def d_hat(self, x, n):
+    def d_hat(self, x, n, sigma):
         '''  x = [pl_d (nx8), pl_d0 (nx8), d0 (nx8)] '''
         pl_d = x[0, :].ravel()
         pl_d0 = x[1, :].ravel()
         d0 = x[2, :].ravel()
-        rand = np.matlib.repmat(self.rand, 12344, 1).transpose()
+        rand = np.matlib.repmat(
+            self.create_gaussian(sigma), 12344, 1).transpose()
         print " ".join(("d_hat", "pl_d:", str(pl_d.shape), "pl_d0:",
                         str(pl_d0.shape), "d0:", str(d0.shape), "rand",
                         str(rand.shape)))
@@ -119,9 +116,10 @@ class ldpl_based_trilateration(object):
         pl = pl_0 + 10 * n * np.log10(d0 / d)
         return pl
 
-    def get_radial_distance(self, pl_d, pl_d0, n, d0):
+    def get_radial_distance(self, pl_d, pl_d0, n, d0, sigma):
         # print rand.shape
-        rand = np.matlib.repmat(self.rand, pl_d0.size, 1).transpose()
+        rand = np.matlib.repmat(self.create_gaussian(
+            sigma), pl_d0.size, 1).transpose()
         # print rand.shape
         # print "pl", pl_d.shape
         # print "pl_d0", pl_d0.shape
@@ -145,9 +143,10 @@ class ldpl_based_trilateration(object):
         # print A.shape, b.shape, temp.shape, temp2.shape
         return np.linalg.pinv(A).dot(b) + pos_node[0, :].reshape(2, 1)
 
-    def create_gaussian(self):
-        x = np.linspace(-4, 4, self.n_samples)
-        return norm.pdf(x)
+    def create_gaussian(self, sigma):
+        x = np.linspace(norm.ppf(0.01, scale=sigma), norm.ppf(
+            0.99, scale=sigma), self.n_samples)
+        return norm.pdf(x, scale=sigma)
 
     ''' Properties '''
     def d():
